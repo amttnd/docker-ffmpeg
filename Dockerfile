@@ -61,7 +61,8 @@ ENV \
   X265=4.1 \
   XVID=1.3.7 \
   ZIMG=3.0.6 \
-  ZMQ=v4.3.5
+  ZMQ=v4.3.5 \
+  WHISPER_CPP=1.7.6
 
 RUN \
   echo "**** install build packages ****" && \
@@ -874,6 +875,18 @@ RUN \
     --enable-shared && \
   make && \
   make install-strip
+RUN \
+  echo "**** grabbing whisper.cpp ****" && \
+  mkdir -p /tmp/whisper.cpp && \
+  curl -Lf \
+    https://github.com/ggml-org/whisper.cpp/archive/refs/tags/v${WHISPER_CPP}.tar.gz | \
+    tar -zx --strip-components=1 -C /tmp/whisper.cpp
+RUN \
+  echo "**** compiling whisper.cpp ****" && \
+  cd /tmp/whisper.cpp && \
+  cmake -B build -DGGML_VULKAN=1 && \
+  cmake --build build --config Release && \
+  make install -C build
 
 # main ffmpeg build
 RUN \
@@ -948,6 +961,7 @@ RUN \
     --enable-vdpau \
     --enable-version3 \
     --enable-vulkan \
+    --enable-whisper \
     && \
   make
 
